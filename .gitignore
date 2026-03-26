@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+logs/*.log
+.DS_Store
+*.tsbuildinfo
+
+# Documentation (local only)
+PRD.md
+APPFLOW.md
+GEMINI.md
+
+# Gemini skills and config (local only)
+.gemini/
