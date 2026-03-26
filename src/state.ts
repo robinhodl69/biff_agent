@@ -1,5 +1,23 @@
 import { Annotation } from '@langchain/langgraph'
 
+/** Acciones posibles que el agente puede decidir ejecutar */
+export type BiffAction = 
+  | 'monitor' 
+  | 'evaluate' 
+  | 'request_credit' 
+  | 'add_collateral' 
+  | 'repay_or_renew' 
+  | 'idle' 
+  | 'START' 
+  | 'monitor_error' 
+  | 'credit_opened' 
+  | 'credit_failed'
+  | 'collateral_added'
+  | 'repaid'
+  | 'renewed'
+  | 'payment_processed'
+  | 'payment_error';
+
 /** Store global para sincronizar ganancias API con el agente */
 export const globalStats = {
   totalApiEarnings: 0
@@ -24,7 +42,7 @@ export const BiffStateAnnotation = Annotation.Root({
     collateral: number
   }>>(),
   /** Identificador del último nodo ejecutado en el grafo */
-  lastAction: Annotation<string>(),
+  lastAction: Annotation<BiffAction>(),
   /** Razonamiento del LLM tras la última evaluación */
   actionReason: Annotation<string>(),
   /** Ganancias totales acumuladas por la API x402 */

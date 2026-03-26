@@ -1,5 +1,5 @@
 import { StateGraph, START, END } from '@langchain/langgraph'
-import { BiffStateAnnotation, initialState } from './state'
+import { BiffStateAnnotation, initialState, BiffAction } from './state'
 import { monitorState } from './nodes/monitor'
 import { evaluateDecision } from './nodes/evaluate'
 import { requestCredit } from './nodes/credit'
@@ -9,18 +9,15 @@ import { initWallet } from './wallet'
 import { config } from './config'
 import { logger } from './logger'
 
-/** Nodo para idle (sin acción onchain) */
-async function idleNode() { 
-  return { lastAction: 'idle' } 
-}
+/** Nodo para idle */
+async function idleNode() { return { lastAction: 'idle' as BiffAction } }
 
-/** Nodo final para registro y auditoría */
+/** Nodo final para registro */
 async function logOperation(state: typeof BiffStateAnnotation.State) {
   logger.info('Cycle Summary', { 
     action: state.lastAction, 
     reason: state.actionReason,
-    usdc: state.usdcBalance,
-    earnings: state.totalApiEarnings
+    usdc: state.usdcBalance
   })
   return { 
     operationLog: [
@@ -30,7 +27,6 @@ async function logOperation(state: typeof BiffStateAnnotation.State) {
   }
 }
 
-// Configuración del Grafo
 const workflow = new StateGraph(BiffStateAnnotation)
   .addNode('monitor', monitorState)
   .addNode('evaluate', evaluateDecision)
@@ -41,7 +37,14 @@ const workflow = new StateGraph(BiffStateAnnotation)
   .addNode('log_operation', logOperation)
   .addEdge(START, 'monitor')
   .addEdge('monitor', 'evaluate')
-  .addConditionalEdges('evaluate', (state) => state.lastAction as any)
+  .addConditionalEdges('evaluate', (state) => {
+    // Si hubo error en monitor, saltamos directo a log_operation
+    if (state.lastAction === 'monitor_error') return 'log_operation'
+    
+    // Mapeo estricto de acciones a nodos
+    const validActions: BiffAction[] = ['request_credit', 'add_collateral', 'repay_or_renew', 'idle']
+    return validActions.includes(state.lastAction) ? state.lastAction : 'idle'
+  })
   .addEdge('request_credit', 'log_operation')
   .addEdge('add_collateral', 'log_operation')
   .addEdge('repay_or_renew', 'log_operation')
@@ -54,24 +57,20 @@ async function main() {
   try {
     logger.info('Biff Agent Bootstrap starting...')
     const wallet = await initWallet()
-    
-    // Inicia el servidor API en paralelo
     startApiServer(wallet.getAddress())
 
-    // Loop principal del Agente
     while (true) {
       try {
         logger.info('--- Starting Agent Cycle ---')
         await app.invoke(initialState)
       } catch (error: any) {
-        logger.error('Cycle failed, continuing...', { error: error.message })
+        logger.error('Critical cycle failure', { message: error.message })
       }
       await new Promise(resolve => setTimeout(resolve, config.AGENT_LOOP_INTERVAL_MS))
     }
   } catch (error: any) {
-    logger.error('Fatal bootstrap error', { error: error.message })
+    logger.error('Fatal bootstrap error', { message: error.message })
     process.exit(1)
   }
 }
-
 main()

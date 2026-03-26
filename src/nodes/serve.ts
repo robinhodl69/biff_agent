@@ -6,13 +6,13 @@ import { globalStats } from '../state'
 
 const app = express()
 
-async function floeQuery(endpoint: string, _params: any) {
-  logger.info(`Floe API Query: ${endpoint}`)
+async function floeQuery(endpoint: string, params: any) {
+  logger.info(`Floe API Query: ${endpoint}`, { params })
   return { ltv: 65, daysRemaining: 10, status: 'HEALTHY' }
 }
 
 /**
- * Inicia el servidor API monetizado con x402.
+ * startApiServer: Servidor Express con validación y x402.
  */
 export function startApiServer(walletAddress: string) {
   const x402 = (amount: number) => paymentMiddleware({
@@ -24,30 +24,30 @@ export function startApiServer(walletAddress: string) {
   app.get('/loan-health', x402(0.10), async (req: Request, res: Response) => {
     try {
       const { loanId, walletAddress: target } = req.query
+      if (!loanId && !target) {
+        return res.status(400).json({ error: 'Missing loanId or walletAddress query param' })
+      }
+
       const data = await floeQuery('checkcreditstatus', { loanId, target })
-      
       globalStats.totalApiEarnings += 0.10
-      res.json({ 
-        ...data, 
-        recommendation: data.ltv > 70 ? 'DANGER: Add collateral' : 'HEALTHY: No action needed' 
-      })
+      res.json({ ...data, recommendation: 'HEALTHY: No immediate risk detected' })
     } catch (error: any) {
-      res.status(500).json({ error: error.message })
+      logger.error('API /loan-health error', { error: error.message })
+      res.status(500).json({ error: 'Internal intelligence error' })
     }
   })
 
   app.get('/intent-intel', x402(0.05), async (req: Request, res: Response) => {
     try {
+      const { amount } = req.query
+      if (!amount) return res.status(400).json({ error: 'Missing amount query param' })
+
       await floeQuery('getintentbook', req.query)
       globalStats.totalApiEarnings += 0.05
-      res.json({ 
-        topOffers: [], 
-        avgRate: 0.12, 
-        bestRate: 0.10, 
-        recommendation: 'Good market liquidity available' 
-      })
+      res.json({ avgRate: 0.12, bestRate: 0.10, recommendation: 'Favorable liquidity conditions' })
     } catch (error: any) {
-      res.status(500).json({ error: error.message })
+      logger.error('API /intent-intel error', { error: error.message })
+      res.status(500).json({ error: 'Internal intelligence error' })
     }
   })
 

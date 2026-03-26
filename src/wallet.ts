@@ -4,21 +4,31 @@ import { logger } from './logger'
 
 let walletProvider: CdpWalletProvider | null = null
 
+const DECIMALS = {
+  USDC: 6,
+  WETH: 18
+}
+
 /**
  * Inicializa el CdpWalletProvider con las credenciales de CDP.
  */
 export async function initWallet(): Promise<CdpWalletProvider> {
+  if (walletProvider) return walletProvider
+
   try {
     walletProvider = await CdpWalletProvider.configureWithWallet({
       apiKeyName: config.CDP_API_KEY_NAME,
       apiKeyPrivateKey: config.CDP_API_KEY_PRIVATE_KEY,
       networkId: config.NETWORK_ID
     })
-    logger.info('CDP Wallet initialized', { address: walletProvider.getAddress() })
+    logger.info('CDP Wallet initialized', { 
+      address: walletProvider.getAddress(),
+      network: config.NETWORK_ID 
+    })
     return walletProvider
-  } catch (error) {
-    logger.error('Failed to initialize CDP Wallet', { error })
-    throw error
+  } catch (error: any) {
+    logger.error('Failed to initialize CDP Wallet', { message: error.message })
+    throw new Error(`Wallet Initialization Error: ${error.message}`)
   }
 }
 
@@ -38,26 +48,24 @@ export async function getBalances(): Promise<{ usdc: number; weth: number }> {
   try {
     const abi = [{ name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'a', type: 'address' }], outputs: [{ type: 'uint256' }] }] as const
     
-    const usdcRaw = await client.readContract({
-      address: config.USDC_ADDRESS as `0x${string}`,
-      abi, 
-      functionName: 'balanceOf', 
-      args: [client.getAddress() as `0x${string}`]
-    }) as bigint
-
-    const wethRaw = await client.readContract({
-      address: config.WETH_ADDRESS as `0x${string}`,
-      abi, 
-      functionName: 'balanceOf', 
-      args: [client.getAddress() as `0x${string}`]
-    }) as bigint
+    // Ejecutar lecturas en paralelo para eficiencia
+    const [usdcRaw, wethRaw] = await Promise.all([
+      client.readContract({
+        address: config.USDC_ADDRESS as `0x${string}`,
+        abi, functionName: 'balanceOf', args: [client.getAddress() as `0x${string}`]
+      }),
+      client.readContract({
+        address: config.WETH_ADDRESS as `0x${string}`,
+        abi, functionName: 'balanceOf', args: [client.getAddress() as `0x${string}`]
+      })
+    ]) as [bigint, bigint]
 
     return {
-      usdc: Number(usdcRaw) / 1e6, // USDC has 6 decimals
-      weth: Number(wethRaw) / 1e18  // WETH has 18 decimals
+      usdc: Number(usdcRaw) / Math.pow(10, DECIMALS.USDC),
+      weth: Number(wethRaw) / Math.pow(10, DECIMALS.WETH)
     }
-  } catch (error) {
-    logger.error('Error fetching onchain balances', { error })
-    return { usdc: 0, weth: 0 }
+  } catch (error: any) {
+    logger.error('Error fetching onchain balances', { message: error.message })
+    throw new Error(`Blockchain Reading Error: ${error.message}`)
   }
 }

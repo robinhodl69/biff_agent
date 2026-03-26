@@ -31,11 +31,22 @@ export const config = {
   AGENT_LOOP_INTERVAL_MS: (Number(process.env.AGENT_LOOP_INTERVAL_MIN) || 5) * 60 * 1000,
   API_PORT: Number(process.env.API_PORT) || 3000,
 
-  // Chainlink & Contracts (Base Sepolia defaults)
+  // Floe Protocol - Base Sepolia
   FLOE_API_URL: process.env.FLOE_API_URL || 'https://api.floe.finance/v1',
-  CHAINLINK_WETH_USD_FEED: process.env.CHAINLINK_WETH_USD_FEED || '0x4aDC43ef89031E254850DdBC94a9257CBA240f27',
-  USDC_ADDRESS: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
-  WETH_ADDRESS: '0x4200000000000000000000000000000000000006'
+  LENDING_INTENT_MATCHER: '0xF351eDF229ded7E2e2b23E44c70e9964CbA91B2E' as `0x${string}`,
+  PRICE_ORACLE: '0x71020b939b1f0988b2d93c2d930fea5b370203a5' as `0x${string}`,
+  
+  // Chainlink WETH/USD Feed (used as fallback or for direct checks)
+  CHAINLINK_WETH_USD_FEED: '0x4aDC43ef89031E254850DdBC94a9257CBA240f27',
+  
+  // Tokens
+  USDC_ADDRESS: '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as `0x${string}`,
+  WETH_ADDRESS: '0x4200000000000000000000000000000000000006' as `0x${string}`,
+
+  // Protocol Constants
+  MIN_LTV_GAP_BPS: 800,
+  GRACE_PERIOD: 86400,
+  LIQUIDATION_BONUS_BPS: 500
 } as const
 
 export function getLLM() {
@@ -48,6 +59,17 @@ export function getLLM() {
       temperature: 0
     })
   }
+
+  if (provider === 'moonshot') {
+    return new ChatOpenAI({
+      modelName: process.env.LLM_MODEL || 'kimi-k2.5',
+      apiKey: config.LLM_API_KEY,
+      configuration: {
+        baseURL: 'https://api.moonshot.ai/v1'
+      },
+      temperature: 0
+    })
+  }
   
-  throw new Error(`LLM provider ${provider} not implemented in Phase 3.`)
+  throw new Error(`LLM provider ${provider} not implemented.`)
 }
