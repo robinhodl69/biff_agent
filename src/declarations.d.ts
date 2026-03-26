@@ -15,3 +15,12 @@ declare module 'express' {
   }
   export = express;
 }
+
+declare module 'x402-express' {
+  import { RequestHandler } from 'express';
+  export function paymentMiddleware(options: {
+    amount: number;
+    tokenAddress: string;
+    recipient: `0x${string}`;
+  }): RequestHandler;
+}

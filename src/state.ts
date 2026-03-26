@@ -1,30 +1,37 @@
 import { Annotation } from '@langchain/langgraph'
 
+/** Store global para sincronizar ganancias API con el agente */
+export const globalStats = {
+  totalApiEarnings: 0
+}
+
+/**
+ * BiffState representa el estado compartido entre el ciclo del agente y el servidor API.
+ */
 export const BiffStateAnnotation = Annotation.Root({
-  // Wallet
+  /** Balance actual de la wallet en USDC */
   usdcBalance: Annotation<number>(),
+  /** Balance actual de la wallet en WETH */
   wethBalance: Annotation<number>(),
-
-  // Mercado
+  /** Precio de WETH en USD obtenido vía Chainlink */
   wethPriceUSD: Annotation<number>(),
-
-  // Loans
+  /** Lista de préstamos activos en el protocolo Floe */
   activeLoans: Annotation<Array<{
     id: string
     ltv: number
     daysRemaining: number
     principal: number
+    collateral: number
   }>>(),
-
-  // Decisión
+  /** Identificador del último nodo ejecutado en el grafo */
   lastAction: Annotation<string>(),
+  /** Razonamiento del LLM tras la última evaluación */
   actionReason: Annotation<string>(),
-
-  // API earnings
+  /** Ganancias totales acumuladas por la API x402 */
   totalApiEarnings: Annotation<number>(),
+  /** Número de peticiones API pendientes de procesamiento */
   pendingApiRequests: Annotation<number>(),
-
-  // Log
+  /** Registro histórico de operaciones realizadas */
   operationLog: Annotation<Array<{
     timestamp: string
     action: string
