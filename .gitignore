@@ -9,6 +9,9 @@ dist/
 # Environment
 agent/.env
 
+# Agent data (local persistence)
+agent/data/*.json
+
 # Logs
 agent/logs/*.log
 logs/*.log

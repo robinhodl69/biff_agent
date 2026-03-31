@@ -14,6 +14,18 @@ vi.mock("../../src/logger", () => ({
   },
 }));
 
+vi.mock("../../src/store", () => ({
+  getStore: vi.fn(() => ({
+    getConfig: () => ({
+      minUsdcBalance: 50,
+      maxLtv: 70,
+      loanWarnDays: 3,
+      loopIntervalMin: 5,
+      isPaused: false,
+    }),
+  })),
+}));
+
 import { addCollateral, repayOrRenew } from "../../src/nodes/payments";
 import { getWalletClient } from "../../src/wallet";
 import { initialState } from "../../src/state";

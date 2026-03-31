@@ -16,6 +16,19 @@ vi.mock("../../src/logger", () => ({
   },
 }));
 
+vi.mock("../../src/store", () => ({
+  getStore: vi.fn(() => ({
+    getConfig: () => ({
+      minUsdcBalance: 50,
+      maxLtv: 70,
+      loanWarnDays: 3,
+      loopIntervalMin: 5,
+      isPaused: false,
+    }),
+    getForcedAction: () => null,
+  })),
+}));
+
 import { evaluateDecision } from "../../src/nodes/evaluate";
 import { getLLM, config } from "../../src/config";
 
@@ -247,9 +260,9 @@ describe("evaluateDecision node", () => {
     expect(systemPrompt).toContain("3.5"); // WETH balance
     expect(systemPrompt).toContain("2800"); // WETH price
     expect(systemPrompt).toContain("42"); // loan ID
-    expect(systemPrompt).toContain(config.MIN_USDC_BALANCE.toString());
-    expect(systemPrompt).toContain(config.MAX_LTV.toString());
-    expect(systemPrompt).toContain(config.LOAN_WARN_DAYS.toString());
+    expect(systemPrompt).toContain("50"); // minUsdcBalance from store
+    expect(systemPrompt).toContain("70"); // maxLtv from store
+    expect(systemPrompt).toContain("3"); // loanWarnDays from store
   });
 
   it("should handle multi-loan state with mixed conditions", async () => {
