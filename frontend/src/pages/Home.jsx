@@ -11,13 +11,12 @@ const BIFF_ASCII = `
 
         A G E N T
 
-       ┌───────────────────┐
-       │  ┌─────────────┐  │
-       │  │             │  │
-       │  │   ┌───┐     │  │
-       │  │   │   │     │  │
-       │  └───┴───┴─────┘  │
-       └───────────────────┘`;
+     _____________________________
+    |  _________________________  |
+    | |                         | |
+    | |       BIFF AGENT        | |
+    | |_________________________| |
+    |_____________________________|`;
 
 export default function Home() {
   return (
@@ -35,7 +34,7 @@ export default function Home() {
       <div className="relative z-10">
         {/* Hero */}
         <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16">
-          <pre className="text-brand font-mono text-xs sm:text-sm md:text-base leading-[1.1] mb-8 whitespace-pre matrix-text select-none">
+          <pre className="text-brand font-mono text-xs sm:text-sm md:text-base leading-[1.1] mb-10 whitespace-pre matrix-text select-none">
             {BIFF_ASCII}
           </pre>
 
