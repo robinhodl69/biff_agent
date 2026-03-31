@@ -19,7 +19,7 @@ export async function evaluateDecision(state: BiffState): Promise<Partial<BiffSt
     const llm = getLLM()
     
     // Forzamos el output estructurado usando el esquema Zod
-    // @ts-ignore - withStructuredOutput exists on ChatOpenAI
+    // @ts-ignore
     const structuredLlm = llm.withStructuredOutput(DecisionSchema)
 
     const systemPrompt = `You are Biff Agent, an autonomous financial agent on Base Sepolia.

@@ -4,7 +4,7 @@ import { monitorState } from './nodes/monitor'
 import { evaluateDecision } from './nodes/evaluate'
 import { requestCredit } from './nodes/credit'
 import { addCollateral, repayOrRenew } from './nodes/payments'
-import { startApiServer } from './nodes/serve'
+// import { startApiServer } from './nodes/serve'
 import { initWallet } from './wallet'
 import { config } from './config'
 import { logger } from './logger'
@@ -57,7 +57,8 @@ async function main() {
   try {
     logger.info('Biff Agent Bootstrap starting...')
     const wallet = await initWallet()
-    startApiServer(wallet.getAddress())
+    // TODO: Re-enable startApiServer once x402-express dependency issue is resolved
+    // startApiServer(wallet.getAddress())
 
     while (true) {
       try {

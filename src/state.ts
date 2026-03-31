@@ -32,7 +32,7 @@ export const BiffStateAnnotation = Annotation.Root({
   /** Balance actual de la wallet en WETH */
   wethBalance: Annotation<number>(),
   /** Precio de WETH en USD obtenido vía Chainlink */
-  wethPriceUSD: Annotation<number>(),
+  wethPriceUSD: Annotation<number | null>(),
   /** Lista de préstamos activos en el protocolo Floe */
   activeLoans: Annotation<Array<{
     id: string
@@ -62,7 +62,7 @@ export type BiffState = typeof BiffStateAnnotation.State
 export const initialState: BiffState = {
   usdcBalance: 0,
   wethBalance: 0,
-  wethPriceUSD: 0,
+  wethPriceUSD: null,
   activeLoans: [],
   lastAction: 'START',
   actionReason: 'initialization',

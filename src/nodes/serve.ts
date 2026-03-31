@@ -1,5 +1,7 @@
 import express, { Request, Response } from 'express'
-import { paymentMiddleware } from 'x402-express'
+// TODO: x402-express dependency is causing module resolution crash. 
+// Re-activate and fix when possible.
+// import { paymentMiddleware } from 'x402-express'
 import { config } from '../config'
 import { logger } from '../logger'
 import { globalStats } from '../state'
@@ -15,13 +17,15 @@ async function floeQuery(endpoint: string, params: any) {
  * startApiServer: Servidor Express con validación y x402.
  */
 export function startApiServer(walletAddress: string) {
+  /*
   const x402 = (amount: number) => paymentMiddleware({
     amount,
     tokenAddress: config.USDC_ADDRESS,
     recipient: walletAddress as `0x${string}`
   })
+  */
 
-  app.get('/loan-health', x402(0.10), async (req: Request, res: Response) => {
+  app.get('/loan-health', async (req: Request, res: Response) => {
     try {
       const { loanId, walletAddress: target } = req.query
       if (!loanId && !target) {
@@ -37,7 +41,7 @@ export function startApiServer(walletAddress: string) {
     }
   })
 
-  app.get('/intent-intel', x402(0.05), async (req: Request, res: Response) => {
+  app.get('/intent-intel', async (req: Request, res: Response) => {
     try {
       const { amount } = req.query
       if (!amount) return res.status(400).json({ error: 'Missing amount query param' })

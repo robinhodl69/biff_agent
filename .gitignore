@@ -1,14 +1,26 @@
+# Dependencies
 node_modules/
+package-lock.json
+
+# Build output
 dist/
-.env
-logs/*.log
-.DS_Store
 *.tsbuildinfo
 
-# Documentation (local only)
+# Environment
+.env
+
+# Logs
+logs/*.log
+
+# OS
+.DS_Store
+
+# Documentation (local working docs)
+ARCHITECTURE.md
+MONITORING_PLAN.md
 PRD.md
 APPFLOW.md
 GEMINI.md
 
-# Gemini skills and config (local only)
+# Local AI config
 .gemini/

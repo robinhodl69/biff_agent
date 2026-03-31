@@ -1,9 +1,12 @@
 import 'dotenv/config'
 import { ChatOpenAI } from '@langchain/openai'
+import { ChatAnthropic } from '@langchain/anthropic'
+import { getAddress, isAddress } from 'viem'
 
 const requiredEnv = [
-  'CDP_API_KEY_NAME',
-  'CDP_API_KEY_PRIVATE_KEY',
+  'CDP_API_KEY_ID',
+  'CDP_API_KEY_SECRET',
+  'CDP_WALLET_SECRET',
   'NETWORK_ID',
   'LLM_PROVIDER',
   'LLM_API_KEY'
@@ -17,12 +20,17 @@ for (const env of requiredEnv) {
 
 export const config = {
   // Required
-  CDP_API_KEY_NAME: process.env.CDP_API_KEY_NAME!,
-  CDP_API_KEY_PRIVATE_KEY: process.env.CDP_API_KEY_PRIVATE_KEY!.replace(/\\n/g, '\n'),
+  CDP_API_KEY_ID: process.env.CDP_API_KEY_ID!,
+  CDP_API_KEY_SECRET: process.env.CDP_API_KEY_SECRET!.replace(/\\n/g, '\n'),
+  CDP_WALLET_SECRET: process.env.CDP_WALLET_SECRET!,
   NETWORK_ID: process.env.NETWORK_ID!,
   LLM_PROVIDER: process.env.LLM_PROVIDER!,
   LLM_API_KEY: process.env.LLM_API_KEY!,
-  LLM_MODEL: process.env.LLM_MODEL || 'gpt-4o-mini',
+  LLM_MODEL: process.env.LLM_MODEL || (process.env.LLM_PROVIDER === 'anthropic' ? 'claude-3-5-sonnet-latest' : 'gpt-4o-mini'),
+
+  // Wallet Strategy
+  WALLET_ADDRESS: process.env.WALLET_ADDRESS,
+  WALLET_IDEMPOTENCY_KEY: process.env.WALLET_IDEMPOTENCY_KEY,
 
   // Optional with defaults
   MIN_USDC_BALANCE: Number(process.env.MIN_USDC_BALANCE) || 50,
@@ -37,7 +45,11 @@ export const config = {
   PRICE_ORACLE: '0x71020b939b1f0988b2d93c2d930fea5b370203a5' as `0x${string}`,
   
   // Chainlink WETH/USD Feed (used as fallback or for direct checks)
-  CHAINLINK_WETH_USD_FEED: '0x4aDC43ef89031E254850DdBC94a9257CBA240f27',
+  CHAINLINK_WETH_USD_FEED: (() => {
+    const addr = process.env.CHAINLINK_WETH_USD_FEED || '0x4aDC67696bA383F43DD60A9e78F2C97Fbbfc7cb1'
+    if (!isAddress(addr)) throw new Error(`Invalid CHAINLINK_WETH_USD_FEED: ${addr}`)
+    return getAddress(addr) as `0x${string}`
+  })(),
   
   // Tokens
   USDC_ADDRESS: '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as `0x${string}`,
@@ -60,13 +72,10 @@ export function getLLM() {
     })
   }
 
-  if (provider === 'moonshot') {
-    return new ChatOpenAI({
-      modelName: process.env.LLM_MODEL || 'kimi-k2.5',
-      apiKey: config.LLM_API_KEY,
-      configuration: {
-        baseURL: 'https://api.moonshot.ai/v1'
-      },
+  if (provider === 'anthropic') {
+    return new ChatAnthropic({
+      modelName: config.LLM_MODEL,
+      anthropicApiKey: config.LLM_API_KEY,
       temperature: 0
     })
   }
