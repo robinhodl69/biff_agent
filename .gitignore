@@ -7,7 +7,7 @@ dist/
 *.tsbuildinfo
 
 # Environment
-.env
+agent/.env
 
 # Logs
 agent/logs/*.log
