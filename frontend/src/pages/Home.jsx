@@ -1,12 +1,5 @@
 import { Link } from "react-router-dom";
-import {
-  Terminal,
-  Activity,
-  ArrowRight,
-  Shield,
-  Zap,
-  Globe,
-} from "lucide-react";
+import { Terminal, Activity, ArrowRight } from "lucide-react";
 
 const BIFF_ASCII = `
  ██████╗ ██╗   ██╗██╗    ██╗██╗     ███████╗
@@ -18,19 +11,13 @@ const BIFF_ASCII = `
 
         A G E N T
 
-       ╔═══════════════╗
-       ║  ┌─────────┐  ║
-       ║  │  ╭───╮  │  ║
-       ║  │  │   │  │  ║
-       ║  │  ╰───╯  │  ║
-       ║  │  ┌───┐  │  ║
-       ║  │  │   │  │  ║
-       ║  │  ╰───╯  │  ║
-       ║  └─────────┘  ║
-       ║    ┌─────┐    ║
-       ║    │ BIF │    ║
-       ║    └─────┘    ║
-       ╚═══════════════╝`;
+       ┌───────────────────┐
+       │  ┌─────────────┐  │
+       │  │             │  │
+       │  │   ┌───┐     │  │
+       │  │   │   │     │  │
+       │  └───┴───┴─────┘  │
+       └───────────────────┘`;
 
 export default function Home() {
   return (
@@ -48,7 +35,7 @@ export default function Home() {
       <div className="relative z-10">
         {/* Hero */}
         <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16">
-          <pre className="text-brand font-mono text-[6px] xs:text-[7px] sm:text-xs md:text-sm leading-[1.1] mb-8 whitespace-pre matrix-text select-none">
+          <pre className="text-brand font-mono text-xs sm:text-sm md:text-base leading-[1.1] mb-8 whitespace-pre matrix-text select-none">
             {BIFF_ASCII}
           </pre>
 
@@ -83,47 +70,6 @@ export default function Home() {
                 How it Works
               </Link>
             </div>
-          </div>
-
-          {/* Quick stats */}
-          <div className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl w-full">
-            {[
-              {
-                icon: <Globe size={16} />,
-                label: "Network",
-                value: "Base Sepolia",
-              },
-              {
-                icon: <Shield size={16} />,
-                label: "Security",
-                value: "CDP v2",
-              },
-              {
-                icon: <Zap size={16} />,
-                label: "Intelligence",
-                value: "Claude Sonnet",
-              },
-              {
-                icon: <Activity size={16} />,
-                label: "Lending",
-                value: "Floe Protocol",
-              },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className="text-center p-3 bg-bg-surface/50 border border-border-subtle rounded-lg"
-              >
-                <div className="flex items-center justify-center gap-1.5 mb-1 text-brand/60">
-                  {stat.icon}
-                </div>
-                <p className="text-text-muted text-[10px] uppercase tracking-wider">
-                  {stat.label}
-                </p>
-                <p className="text-text-primary text-xs font-mono mt-0.5">
-                  {stat.value}
-                </p>
-              </div>
-            ))}
           </div>
         </div>
       </div>
