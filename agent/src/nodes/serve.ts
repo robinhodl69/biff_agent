@@ -219,7 +219,14 @@ export function startApiServer(walletAddress: string) {
 
   // ─── Static Files (Frontend) ───────────────────────────────────
 
-  const frontendDist = path.join(__dirname, "..", "..", "frontend", "dist");
+  const frontendDist = path.join(
+    __dirname,
+    "..",
+    "..",
+    "..",
+    "frontend",
+    "dist",
+  );
   app.use(express.static(frontendDist));
 
   // SPA fallback: serve index.html for non-API routes
