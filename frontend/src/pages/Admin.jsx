@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import {
-  ArrowLeft,
   Lock,
   Play,
   Pause,
@@ -11,10 +9,17 @@ import {
   ChevronDown,
   ChevronUp,
   AlertTriangle,
+  Shield,
+  Clock,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { useAgentState, useAgentConfig } from "../hooks/useAgent";
 import { apiPost } from "../api/client";
+import Navbar from "../components/Navbar";
+import StatusBadge from "../components/StatusBadge";
+import { StatCard } from "../components/StatCard";
 
 function LoginScreen({ onLogin }) {
   const [secret, setSecret] = useState("");
@@ -34,39 +39,41 @@ function LoginScreen({ onLogin }) {
 
   return (
     <div className="min-h-screen bg-bg-primary flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-bg-surface border border-border-subtle rounded-xl p-8">
+      <div className="w-full max-w-sm">
+        <div className="bg-bg-surface border border-border-subtle rounded-2xl p-8">
           <div className="flex items-center justify-center mb-6">
-            <div className="w-12 h-12 bg-green-400/10 rounded-full flex items-center justify-center">
-              <Lock size={24} className="text-green-400" />
+            <div className="w-14 h-14 rounded-2xl bg-brand/10 border border-brand/20 flex items-center justify-center">
+              <Lock size={24} className="text-brand" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-text-primary text-center mb-2">
+          <h1 className="text-xl font-bold text-text-primary text-center mb-1">
             Admin Access
           </h1>
-          <p className="text-text-secondary text-center mb-6">
+          <p className="text-text-muted text-sm text-center mb-6">
             Enter your admin secret to continue
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="password"
-              value={secret}
-              onChange={(e) => setSecret(e.target.value)}
-              placeholder="Admin secret"
-              className="w-full px-4 py-3 bg-bg-elevated border border-border-default rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-green-600 transition-colors"
-              autoFocus
-            />
-            {error && (
-              <p className="text-error text-sm flex items-center gap-1">
-                <AlertTriangle size={14} />
-                {error}
-              </p>
-            )}
+            <div>
+              <input
+                type="password"
+                value={secret}
+                onChange={(e) => setSecret(e.target.value)}
+                placeholder="Admin secret"
+                className="w-full px-4 py-3 bg-bg-elevated border border-border-default rounded-xl text-text-primary placeholder-text-dim focus:outline-none focus:border-brand/50 focus:ring-1 focus:ring-brand/20 transition-all"
+                autoFocus
+              />
+              {error && (
+                <p className="text-error text-sm flex items-center gap-1.5 mt-2">
+                  <AlertTriangle size={14} />
+                  {error}
+                </p>
+              )}
+            </div>
             <button
               type="submit"
               disabled={loading || !secret}
-              className="w-full py-3 bg-green-600 rounded-lg text-bg-primary font-medium hover:bg-green-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-brand text-bg-primary font-semibold rounded-xl hover:bg-brand-dim transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(0,255,65,0.2)]"
             >
               {loading ? "Authenticating..." : "Access Admin"}
             </button>
@@ -77,28 +84,29 @@ function LoginScreen({ onLogin }) {
   );
 }
 
-function ControlButton({
-  onClick,
-  variant = "default",
-  children,
-  disabled = false,
-}) {
-  const variants = {
-    default:
-      "bg-bg-elevated border-border-default text-text-primary hover:border-green-600",
-    success: "bg-success/10 border-success/30 text-success hover:bg-success/20",
-    warning: "bg-warning/10 border-warning/30 text-warning hover:bg-warning/20",
-    danger: "bg-error/10 border-error/30 text-error hover:bg-error/20",
-  };
+function FeedbackToast({ message, onClose }) {
+  const isError =
+    message.toLowerCase().includes("invalid") ||
+    message.toLowerCase().includes("error") ||
+    message.toLowerCase().includes("not configured");
 
   return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`flex items-center gap-2 px-4 py-2.5 border rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]}`}
+    <div
+      className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-elevated max-w-sm ${
+        isError
+          ? "bg-error/10 border-error/30 text-error"
+          : "bg-success/10 border-success/30 text-success"
+      }`}
     >
-      {children}
-    </button>
+      {isError ? <XCircle size={16} /> : <CheckCircle size={16} />}
+      <span className="text-sm font-medium flex-1">{message}</span>
+      <button
+        onClick={onClose}
+        className="text-current opacity-60 hover:opacity-100"
+      >
+        <XCircle size={14} />
+      </button>
+    </div>
   );
 }
 
@@ -109,11 +117,12 @@ export default function Admin() {
   const [showConfig, setShowConfig] = useState(false);
   const [formConfig, setFormConfig] = useState({});
   const [feedback, setFeedback] = useState("");
+  const [actionLoading, setActionLoading] = useState(null);
 
   if (authLoading) {
     return (
       <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-        <div className="text-text-secondary">Loading...</div>
+        <div className="text-text-muted">Loading...</div>
       </div>
     );
   }
@@ -125,7 +134,8 @@ export default function Admin() {
   const s = state || {};
   const c = config || {};
 
-  const handleAction = async (action, body) => {
+  const handleAction = async (action, body, label) => {
+    setActionLoading(label);
     setFeedback("");
     try {
       const result = await apiPost(action, body);
@@ -134,6 +144,8 @@ export default function Admin() {
       refetchConfig();
     } catch (e) {
       setFeedback(e.message);
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -153,225 +165,210 @@ export default function Admin() {
       return;
     }
 
-    await handleAction("/api/config", updates);
-    setFormConfig({});
+    setFeedback("");
+    try {
+      const result = await apiPost("/api/config", updates);
+      setFeedback(result.message || "Configuration updated");
+      refetchState();
+      refetchConfig();
+      setFormConfig({});
+    } catch (e) {
+      setFeedback(e.message);
+    }
   };
+
+  const uptimeHours = s.startTime
+    ? Math.floor((Date.now() - new Date(s.startTime).getTime()) / 3600000)
+    : 0;
 
   return (
     <div className="min-h-screen bg-bg-primary">
-      <nav className="border-b border-border-subtle">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link
-            to="/"
-            className="flex items-center gap-2 text-text-secondary hover:text-green-400 transition-colors"
-          >
-            <ArrowLeft size={16} />
-            Home
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link
-              to="/tracking"
-              className="text-sm text-text-secondary hover:text-green-400 transition-colors"
-            >
-              Tracking
-            </Link>
-            <button
-              onClick={logout}
-              className="flex items-center gap-1 text-sm text-text-muted hover:text-error transition-colors"
-            >
-              <LogOut size={14} />
-              Logout
-            </button>
+      <Navbar />
+
+      {feedback && (
+        <FeedbackToast message={feedback} onClose={() => setFeedback("")} />
+      )}
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-text-primary tracking-tight">
+              Admin Panel
+            </h1>
+            <p className="text-text-muted text-sm mt-0.5">
+              Control and configure the agent
+            </p>
           </div>
+          <button
+            onClick={logout}
+            className="flex items-center gap-1.5 px-3 py-2 text-text-muted hover:text-error transition-colors text-sm"
+          >
+            <LogOut size={14} />
+            <span className="hidden sm:inline">Logout</span>
+          </button>
         </div>
-      </nav>
 
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-        <h1 className="text-2xl font-bold text-text-primary">Admin Panel</h1>
+        {/* Status Overview */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            label="Status"
+            value={s.isPaused ? "Paused" : s.isRunning ? "Running" : "Offline"}
+            icon={<Shield size={16} />}
+          />
+          <StatCard
+            label="Cycles"
+            value={s.totalCycles || 0}
+            icon={<Zap size={16} />}
+          />
+          <StatCard
+            label="Errors"
+            value={s.totalErrors || 0}
+            icon={<AlertTriangle size={16} />}
+          />
+          <StatCard
+            label="Interval"
+            value={`${c.loopIntervalMin || 5}m`}
+            icon={<Clock size={16} />}
+          />
+        </div>
 
-        {feedback && (
-          <div
-            className={`p-3 rounded-lg text-sm ${
-              feedback.includes("Success") || feedback.includes("Success")
-                ? "bg-success/10 text-success border border-success/30"
-                : "bg-error/10 text-error border border-error/30"
-            }`}
-          >
-            {feedback}
+        {/* Controls */}
+        <div className="bg-bg-surface border border-border-subtle rounded-2xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-border-subtle">
+            <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wider">
+              Controls
+            </h2>
           </div>
-        )}
-
-        {/* Agent Status */}
-        <div className="bg-bg-surface border border-border-subtle rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">
-            Agent Status
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-            <div>
-              <p className="text-text-muted text-xs uppercase">Status</p>
-              <p className="text-text-primary font-mono">
-                {s.isPaused ? "Paused" : s.isRunning ? "Running" : "Unknown"}
-              </p>
-            </div>
-            <div>
-              <p className="text-text-muted text-xs uppercase">Cycles</p>
-              <p className="text-text-primary font-mono">
-                {s.totalCycles || 0}
-              </p>
-            </div>
-            <div>
-              <p className="text-text-muted text-xs uppercase">Errors</p>
-              <p className="text-text-primary font-mono">
-                {s.totalErrors || 0}
-              </p>
-            </div>
-            <div>
-              <p className="text-text-muted text-xs uppercase">Interval</p>
-              <p className="text-text-primary font-mono">
-                {c.loopIntervalMin || 5}m
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            {s.isPaused ? (
-              <ControlButton
-                onClick={() => handleAction("/api/resume")}
-                variant="success"
+          <div className="p-6">
+            <div className="flex flex-wrap gap-3">
+              {s.isPaused ? (
+                <button
+                  onClick={() => handleAction("/api/resume", null, "resume")}
+                  disabled={actionLoading === "resume"}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-success/10 border border-success/30 text-success rounded-xl hover:bg-success/20 transition-all disabled:opacity-50 text-sm font-medium"
+                >
+                  <Play size={16} />
+                  Resume Agent
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleAction("/api/pause", null, "pause")}
+                  disabled={actionLoading === "pause"}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-warning/10 border border-warning/30 text-warning rounded-xl hover:bg-warning/20 transition-all disabled:opacity-50 text-sm font-medium"
+                >
+                  <Pause size={16} />
+                  Pause Agent
+                </button>
+              )}
+              <button
+                onClick={() => handleAction("/api/force-cycle", null, "cycle")}
+                disabled={actionLoading === "cycle"}
+                className="flex items-center gap-2 px-4 py-2.5 bg-bg-elevated border border-border-default text-text-secondary rounded-xl hover:text-text-primary hover:border-brand/30 transition-all disabled:opacity-50 text-sm"
               >
-                <Play size={16} /> Resume Agent
-              </ControlButton>
-            ) : (
-              <ControlButton
-                onClick={() => handleAction("/api/pause")}
-                variant="warning"
-              >
-                <Pause size={16} /> Pause Agent
-              </ControlButton>
-            )}
-            <ControlButton
-              onClick={() => handleAction("/api/force-cycle")}
-              variant="default"
-            >
-              <Zap size={16} /> Force Cycle
-            </ControlButton>
-            <ControlButton
-              onClick={() =>
-                handleAction("/api/force-action", { action: "request_credit" })
-              }
-              variant="default"
-            >
-              Force: Request Credit
-            </ControlButton>
-            <ControlButton
-              onClick={() =>
-                handleAction("/api/force-action", { action: "add_collateral" })
-              }
-              variant="default"
-            >
-              Force: Add Collateral
-            </ControlButton>
-            <ControlButton
-              onClick={() =>
-                handleAction("/api/force-action", { action: "repay_or_renew" })
-              }
-              variant="default"
-            >
-              Force: Repay/Renew
-            </ControlButton>
+                <Zap size={16} />
+                Force Cycle
+              </button>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-border-subtle">
+              <p className="text-text-dim text-xs uppercase tracking-wider mb-3">
+                Force Actions
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { action: "request_credit", label: "Request Credit" },
+                  { action: "add_collateral", label: "Add Collateral" },
+                  { action: "repay_or_renew", label: "Repay / Renew" },
+                ].map(({ action, label }) => (
+                  <button
+                    key={action}
+                    onClick={() =>
+                      handleAction("/api/force-action", { action }, action)
+                    }
+                    disabled={actionLoading === action}
+                    className="px-3 py-2 bg-bg-elevated border border-border-subtle text-text-muted rounded-lg hover:text-text-secondary hover:border-border-active transition-all disabled:opacity-50 text-xs font-mono"
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Config */}
-        <div className="bg-bg-surface border border-border-subtle rounded-xl">
+        {/* Configuration */}
+        <div className="bg-bg-surface border border-border-subtle rounded-2xl overflow-hidden">
           <button
             onClick={() => setShowConfig(!showConfig)}
-            className="w-full flex items-center justify-between p-6 text-left"
+            className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-bg-hover/50 transition-colors"
           >
-            <div className="flex items-center gap-2">
-              <Settings size={18} className="text-green-400" />
-              <h2 className="text-lg font-semibold text-text-primary">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center text-brand">
+                <Settings size={16} />
+              </div>
+              <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wider">
                 Configuration
               </h2>
             </div>
             {showConfig ? (
-              <ChevronUp size={18} className="text-text-muted" />
+              <ChevronUp size={18} className="text-text-dim" />
             ) : (
-              <ChevronDown size={18} className="text-text-muted" />
+              <ChevronDown size={18} className="text-text-dim" />
             )}
           </button>
 
           {showConfig && (
-            <div className="px-6 pb-6 space-y-4 border-t border-border-subtle pt-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-text-muted text-xs uppercase mb-1">
-                    Min USDC Balance
-                  </label>
-                  <input
-                    type="number"
-                    value={formConfig.minUsdcBalance ?? c.minUsdcBalance ?? 50}
-                    onChange={(e) =>
-                      setFormConfig({
-                        ...formConfig,
-                        minUsdcBalance: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 bg-bg-elevated border border-border-default rounded-lg text-text-primary focus:outline-none focus:border-green-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-text-muted text-xs uppercase mb-1">
-                    Max LTV (%)
-                  </label>
-                  <input
-                    type="number"
-                    value={formConfig.maxLtv ?? c.maxLtv ?? 70}
-                    onChange={(e) =>
-                      setFormConfig({ ...formConfig, maxLtv: e.target.value })
-                    }
-                    className="w-full px-3 py-2 bg-bg-elevated border border-border-default rounded-lg text-text-primary focus:outline-none focus:border-green-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-text-muted text-xs uppercase mb-1">
-                    Loan Warn Days
-                  </label>
-                  <input
-                    type="number"
-                    value={formConfig.loanWarnDays ?? c.loanWarnDays ?? 3}
-                    onChange={(e) =>
-                      setFormConfig({
-                        ...formConfig,
-                        loanWarnDays: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 bg-bg-elevated border border-border-default rounded-lg text-text-primary focus:outline-none focus:border-green-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-text-muted text-xs uppercase mb-1">
-                    Loop Interval (min)
-                  </label>
-                  <input
-                    type="number"
-                    value={formConfig.loopIntervalMin ?? c.loopIntervalMin ?? 5}
-                    onChange={(e) =>
-                      setFormConfig({
-                        ...formConfig,
-                        loopIntervalMin: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 bg-bg-elevated border border-border-default rounded-lg text-text-primary focus:outline-none focus:border-green-600"
-                  />
-                </div>
+            <div className="px-6 pb-6 border-t border-border-subtle">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                {[
+                  {
+                    key: "minUsdcBalance",
+                    label: "Min USDC Balance",
+                    current: c.minUsdcBalance ?? 50,
+                  },
+                  {
+                    key: "maxLtv",
+                    label: "Max LTV (%)",
+                    current: c.maxLtv ?? 70,
+                  },
+                  {
+                    key: "loanWarnDays",
+                    label: "Loan Warn Days",
+                    current: c.loanWarnDays ?? 3,
+                  },
+                  {
+                    key: "loopIntervalMin",
+                    label: "Loop Interval (min)",
+                    current: c.loopIntervalMin ?? 5,
+                  },
+                ].map(({ key, label, current }) => (
+                  <div key={key}>
+                    <label className="block text-text-dim text-xs uppercase tracking-wider mb-1.5">
+                      {label}
+                    </label>
+                    <input
+                      type="number"
+                      value={formConfig[key] ?? current}
+                      onChange={(e) =>
+                        setFormConfig({ ...formConfig, [key]: e.target.value })
+                      }
+                      className="w-full px-3 py-2.5 bg-bg-elevated border border-border-default rounded-xl text-text-primary focus:outline-none focus:border-brand/50 focus:ring-1 focus:ring-brand/20 transition-all text-sm font-mono"
+                    />
+                  </div>
+                ))}
               </div>
-              <button
-                onClick={handleConfigUpdate}
-                className="px-6 py-2.5 bg-green-600 rounded-lg text-bg-primary font-medium hover:bg-green-500 transition-colors"
-              >
-                Save Configuration
-              </button>
+              <div className="mt-4 flex items-center justify-between">
+                <p className="text-text-dim text-xs">
+                  Changes take effect on the next cycle
+                </p>
+                <button
+                  onClick={handleConfigUpdate}
+                  className="px-5 py-2.5 bg-brand text-bg-primary font-semibold rounded-xl hover:bg-brand-dim transition-all text-sm shadow-[0_0_15px_rgba(0,255,65,0.2)]"
+                >
+                  Save Changes
+                </button>
+              </div>
             </div>
           )}
         </div>

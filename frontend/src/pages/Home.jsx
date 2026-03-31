@@ -1,56 +1,131 @@
 import { Link } from "react-router-dom";
-import { Terminal, Activity } from "lucide-react";
+import {
+  Terminal,
+  Activity,
+  ArrowRight,
+  Shield,
+  Zap,
+  Globe,
+} from "lucide-react";
 
 const BIFF_ASCII = `
-         ██████╗ ██╗   ██╗██╗    ██╗██╗
-        ██╔════╝ ██║   ██║██║    ██║██║
-        ██║  ███╗██║   ██║██║ █╗ ██║██║
-        ██║   ██║██║   ██║██║███╗██║██║
-        ╚██████╔╝╚██████╔╝╚███╔███╔╝███████╗
-         ╚═════╝  ╚═════╝  ╚══╝╚══╝ ╚══════╝
+ ██████╗ ██╗   ██╗██╗    ██╗██╗     ███████╗
+ ██╔══██╗██║   ██║██║    ██║██║     ██╔════╝
+ ██████╔╝██║   ██║██║ █╗ ██║██║     █████╗
+ ██╔═══╝ ██║   ██║██║███╗██║██║     ██╔══╝
+ ██║     ╚██████╔╝╚███╔███╔╝███████╗███████╗
+ ╚═╝      ╚═════╝  ╚══╝╚══╝ ╚══════╝╚══════╝
 
-              ▄▀▀▀█▀▀▀▄
-             █  ▄ ▄  █
-             █ ▀██▀  █
-             ▀▄▄▄▄▄▄▀
-              █     █
-              █ ▄▄▄ █
-              █ █▄▄ █
-              ▀▄▄▄▄▀
-             ██║   ██║
-             ██║   ██║
-             ╚═╝   ╚═╝`;
+        A G E N T
+
+       ╔═══════════════╗
+       ║  ┌─────────┐  ║
+       ║  │  ╭───╮  │  ║
+       ║  │  │   │  │  ║
+       ║  │  ╰───╯  │  ║
+       ║  │  ┌───┐  │  ║
+       ║  │  │   │  │  ║
+       ║  │  ╰───╯  │  ║
+       ║  └─────────┘  ║
+       ║    ┌─────┐    ║
+       ║    │ BIF │    ║
+       ║    └─────┘    ║
+       ╚═══════════════╝`;
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-bg-primary flex flex-col items-center justify-center px-4">
-      <pre className="text-green-400 font-mono text-xs sm:text-sm md:text-base leading-tight mb-8 whitespace-pre">
-        {BIFF_ASCII}
-      </pre>
+    <div className="min-h-screen bg-bg-primary relative overflow-hidden">
+      {/* Subtle grid background */}
+      <div
+        className="absolute inset-0 opacity-[0.02]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(0,255,65,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,65,0.3) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
 
-      <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-text-primary tracking-tight mb-3">
-        Biff Agent
-      </h1>
+      <div className="relative z-10">
+        {/* Hero */}
+        <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16">
+          <pre className="text-brand font-mono text-[6px] xs:text-[7px] sm:text-xs md:text-sm leading-[1.1] mb-8 whitespace-pre matrix-text select-none">
+            {BIFF_ASCII}
+          </pre>
 
-      <p className="text-text-secondary text-lg sm:text-xl mb-12 text-center max-w-md">
-        Autonomous Financial Agent on Base
-      </p>
+          <div className="text-center max-w-2xl">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight mb-4">
+              <span className="text-text-primary">Autonomous </span>
+              <span className="text-brand glow-text">Finance</span>
+            </h1>
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        <Link
-          to="/how-it-works"
-          className="flex items-center gap-2 px-6 py-3 bg-bg-surface border border-border-default rounded-lg text-text-primary hover:border-green-600 hover:text-green-400 transition-colors"
-        >
-          <Terminal size={18} />
-          How it Works
-        </Link>
-        <Link
-          to="/tracking"
-          className="flex items-center gap-2 px-6 py-3 bg-green-600 border border-green-600 rounded-lg text-bg-primary font-medium hover:bg-green-500 transition-colors"
-        >
-          <Activity size={18} />
-          Tracking
-        </Link>
+            <p className="text-text-secondary text-base sm:text-lg md:text-xl mb-10 max-w-lg mx-auto leading-relaxed">
+              An AI agent that manages treasury, borrows on Floe, and monetizes
+              intelligence — all on Base.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                to="/tracking"
+                className="group inline-flex items-center gap-2 px-6 py-3 bg-brand text-bg-primary font-semibold rounded-lg hover:bg-brand-dim transition-all shadow-[0_0_20px_rgba(0,255,65,0.3)] hover:shadow-[0_0_30px_rgba(0,255,65,0.4)]"
+              >
+                <Activity size={18} />
+                Live Tracking
+                <ArrowRight
+                  size={16}
+                  className="group-hover:translate-x-0.5 transition-transform"
+                />
+              </Link>
+              <Link
+                to="/how-it-works"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-bg-surface border border-border-default rounded-lg text-text-secondary hover:text-text-primary hover:border-border-active transition-all"
+              >
+                <Terminal size={18} />
+                How it Works
+              </Link>
+            </div>
+          </div>
+
+          {/* Quick stats */}
+          <div className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl w-full">
+            {[
+              {
+                icon: <Globe size={16} />,
+                label: "Network",
+                value: "Base Sepolia",
+              },
+              {
+                icon: <Shield size={16} />,
+                label: "Security",
+                value: "CDP v2",
+              },
+              {
+                icon: <Zap size={16} />,
+                label: "Intelligence",
+                value: "Claude Sonnet",
+              },
+              {
+                icon: <Activity size={16} />,
+                label: "Lending",
+                value: "Floe Protocol",
+              },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="text-center p-3 bg-bg-surface/50 border border-border-subtle rounded-lg"
+              >
+                <div className="flex items-center justify-center gap-1.5 mb-1 text-brand/60">
+                  {stat.icon}
+                </div>
+                <p className="text-text-muted text-[10px] uppercase tracking-wider">
+                  {stat.label}
+                </p>
+                <p className="text-text-primary text-xs font-mono mt-0.5">
+                  {stat.value}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
