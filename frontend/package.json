@@ -1,0 +1,11 @@
+{
+  "name": "biff-frontend",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Biff Agent Dashboard - Financial monitoring and control",
+  "scripts": {
+    "dev": "echo 'Frontend not yet implemented'",
+    "build": "echo 'Frontend not yet implemented'",
+    "start": "echo 'Frontend not yet implemented'"
+  }
+}

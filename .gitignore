@@ -10,17 +10,18 @@ dist/
 .env
 
 # Logs
+agent/logs/*.log
 logs/*.log
 
 # OS
 .DS_Store
 
 # Documentation (local working docs)
-ARCHITECTURE.md
-MONITORING_PLAN.md
-PRD.md
-APPFLOW.md
-GEMINI.md
+agent/ARCHITECTURE.md
+agent/MONITORING_PLAN.md
+agent/PRD.md
+agent/APPFLOW.md
+agent/GEMINI.md
 
 # Local AI config
 .gemini/
